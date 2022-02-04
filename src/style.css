@@ -14,5 +14,10 @@ body {
 }
 
 body {
+  overflow-y: hidden;
   font-family: "Poppins", sans-serif;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
