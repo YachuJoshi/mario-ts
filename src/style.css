@@ -21,3 +21,8 @@ body {
   justify-content: center;
   align-items: center;
 }
+
+canvas {
+  border: 1px solid black;
+  background: url("./images/bg.png");
+}
