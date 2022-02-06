@@ -3,6 +3,7 @@ import { tileSize } from "./constants";
 import { initCanvas } from "./canvas";
 import { Mario } from "./mario";
 import { Element } from "./element";
+import { getCollisionDirection } from "./utils";
 
 interface Keys {
   [key: string]: boolean;
@@ -78,7 +79,6 @@ export class World {
 
   renderLoop(): void {
     this.ctx.clearRect(0, 0, maxMapWidth, this.canvas.height);
-    this.mario.draw(this.ctx);
 
     for (const elem in this.elements) {
       const element = this.elements[elem];
@@ -86,6 +86,8 @@ export class World {
         item.draw(this.ctx);
       });
     }
+
+    this.mario.draw(this.ctx);
   }
 
   gameLoop(): void {
@@ -100,6 +102,36 @@ export class World {
     this.renderLoop();
     this.gameLoop();
     this.marioPlatformCollision();
+
+    this.elements["pipes"].forEach((pipe) => {
+      const dir = getCollisionDirection(this.mario, pipe);
+
+      if (!dir) return;
+
+      const { left, right, top, bottom } = dir;
+
+      if (left) {
+        this.mario.dx = 0;
+        this.mario.x += 2;
+        return;
+      }
+
+      if (right) {
+        this.mario.dx = 0;
+        this.mario.x -= 2;
+        return;
+      }
+
+      if (top) {
+        this.mario.dy *= 1;
+        return;
+      }
+
+      if (bottom) {
+        this.mario.y -= this.mario.dy;
+        this.mario.dy = 0;
+      }
+    });
   };
 
   moveMario(): void {
