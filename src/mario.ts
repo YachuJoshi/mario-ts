@@ -5,8 +5,7 @@ interface MarioProps {
   y: number;
 }
 
-type Direction = "left" | "right" | "idle";
-
+type Direction = "left" | "right";
 const gravity = 1.2;
 
 export class Mario {
@@ -17,6 +16,7 @@ export class Mario {
   dx: number;
   dy: number;
   speed: number;
+  isMoving: boolean;
   direction: Direction;
 
   constructor(props: MarioProps) {
@@ -27,7 +27,7 @@ export class Mario {
     this.dx = 0;
     this.dy = 0;
     this.speed = 4;
-    this.direction = "idle";
+    this.direction = "right";
   }
 
   draw(ctx: CanvasRenderingContext2D): void {
@@ -36,6 +36,11 @@ export class Mario {
   }
 
   setVelocity() {
+    if (!this.isMoving) {
+      this.dx = 0;
+      return;
+    }
+
     if (this.direction === "right") {
       this.dx = this.speed;
       return;
@@ -45,20 +50,18 @@ export class Mario {
       this.dx = -this.speed;
       return;
     }
-
-    this.dx = 0;
   }
 
   update(): void {
-    this.setVelocity();
+    // this.setVelocity();
 
     this.x += this.dx;
     this.y += this.dy;
 
-    if (this.y + this.height + this.dy >= CANVAS_HEIGHT) {
-      this.dy = 0;
-    } else {
+    if (this.y + this.height + this.dy < CANVAS_HEIGHT) {
       this.dy += gravity;
+    } else {
+      this.dy = 0;
     }
   }
 }

@@ -1,6 +1,7 @@
-import { CANVAS_HEIGHT } from "./base";
+import { CANVAS_HEIGHT, CANVAS_WIDTH } from "./base";
 import { initCanvas } from "./canvas";
 import { Mario } from "./mario";
+import { Platform } from "./platform";
 import "./style.css";
 
 interface Keys {
@@ -8,35 +9,66 @@ interface Keys {
 }
 
 const { canvas, ctx } = initCanvas();
+let scrollOffset: number = 0;
+let centerPos: number;
+const maxMapWidth = 6000;
 const keys: Keys = {};
 const mario = new Mario({
   x: 100,
   y: 100,
 });
+const platform = new Platform({
+  x: 0,
+  y: CANVAS_HEIGHT - 32,
+});
 
-const draw = () => {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  mario.draw(ctx);
+const updateMario = (keys: Keys) => {
+  if (keys.left && keys.right) {
+    mario.dx = 0;
+    return;
+  }
+
+  if (keys.left && mario.x > scrollOffset) {
+    mario.dx = -mario.speed;
+    return;
+  }
+
+  // MarioPos < centerPos
+  if (keys.right && mario.x < centerPos) {
+    mario.dx = mario.speed;
+    return;
+  }
+
+  mario.dx = 0;
+
+  // MarioPos >= centerPos
+  if (keys.right) {
+    scrollOffset += 4;
+    ctx.translate(-mario.speed, 0);
+    return;
+  }
 };
 
-const updateMarioDirection = (keys: Keys) => {
-  if (keys.left && keys.right) {
-    mario.direction = "idle";
-    return;
+const marioPlatformCollision = () => {
+  if (
+    mario.x + mario.width > platform.x &&
+    mario.x < platform.x + platform.width &&
+    mario.y + mario.height + mario.dy >= platform.y
+  ) {
+    mario.dy = 0;
   }
-  if (keys.left) {
-    mario.direction = "left";
-    return;
-  }
-  if (keys.right) {
-    mario.direction = "right";
-    return;
-  }
-  mario.direction = "idle";
+};
+
+const draw = () => {
+  ctx.clearRect(0, 0, maxMapWidth, canvas.height);
+  mario.draw(ctx);
+  platform.draw(ctx);
 };
 
 const update = () => {
-  updateMarioDirection(keys);
+  centerPos = scrollOffset + CANVAS_WIDTH / 2 - 120;
+  console.log(mario.x, centerPos, scrollOffset);
+  updateMario(keys);
   mario.update();
 };
 
@@ -45,6 +77,8 @@ const animate = () => {
 
   draw();
   update();
+
+  marioPlatformCollision();
 };
 
 animate();
@@ -60,8 +94,10 @@ addEventListener("keydown", (e) => {
   }
   if (
     e.code === "Space" &&
-    mario.y + mario.height + mario.dy >= CANVAS_HEIGHT
+    !keys.space &&
+    mario.y + mario.height + mario.dy >= CANVAS_HEIGHT - 33
   ) {
+    keys.space = true;
     mario.dy -= 20;
   }
 });
@@ -73,6 +109,11 @@ addEventListener("keyup", (e) => {
   }
   if (e.code === "KeyD") {
     keys.right = false;
+    return;
+  }
+
+  if (e.code === "Space") {
+    keys.space = false;
     return;
   }
 });
