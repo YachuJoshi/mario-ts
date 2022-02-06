@@ -1,13 +1,14 @@
-import { CANVAS_HEIGHT, CANVAS_WIDTH as viewPort } from "./base";
+import { CANVAS_WIDTH as viewPort, MAP } from "./base";
+import { tileSize } from "./constants";
 import { initCanvas } from "./canvas";
 import { Mario } from "./mario";
-import { Platform } from "./platform";
+import { Element } from "./element";
 
 interface Keys {
   [key: string]: boolean;
 }
 
-const maxMapWidth = 6000;
+const maxMapWidth = MAP[0].length * 32;
 
 export class World {
   canvas: HTMLCanvasElement;
@@ -16,7 +17,7 @@ export class World {
   scrollOffset: number;
   centerPos: number;
   keys: Keys;
-  platform: Platform;
+  platforms: Element[];
 
   constructor() {
     this.init();
@@ -28,22 +29,46 @@ export class World {
     this.ctx = ctx;
     this.keys = {};
     this.mario = new Mario({
-      x: 100,
+      x: 50,
       y: 100,
     });
-    this.platform = new Platform({
-      x: 0,
-      y: CANVAS_HEIGHT - 32,
-    });
+    this.platforms = [];
     this.scrollOffset = 0;
     this.centerPos = 0;
     this.setupEventListener();
+    this.renderMap();
+  }
+
+  renderMap(): void {
+    MAP.forEach((row, rIndex) => {
+      row.forEach((column, cIndex) => {
+        switch (column) {
+          case 0:
+            break;
+
+          case 1:
+            this.platforms.push(
+              new Element({
+                x: cIndex * tileSize,
+                y: rIndex * tileSize,
+                type: 1,
+              })
+            );
+            break;
+
+          default:
+            break;
+        }
+      });
+    });
   }
 
   renderLoop(): void {
     this.ctx.clearRect(0, 0, maxMapWidth, this.canvas.height);
     this.mario.draw(this.ctx);
-    this.platform.draw(this.ctx);
+    this.platforms.forEach((platform) => {
+      platform.draw(this.ctx);
+    });
   }
 
   gameLoop(): void {
@@ -53,15 +78,11 @@ export class World {
   }
 
   animate = (): void => {
-    console.log(this.mario.x, this.centerPos, this.scrollOffset);
     requestAnimationFrame(this.animate);
 
     this.renderLoop();
     this.gameLoop();
-
-    if (this.marioPlatformCollision()) {
-      this.mario.dy = 0;
-    }
+    this.marioPlatformCollision();
   };
 
   moveMario(): void {
@@ -91,13 +112,17 @@ export class World {
     }
   }
 
-  marioPlatformCollision = (): boolean => {
-    return (
-      this.mario.x + this.mario.width > this.platform.x &&
-      this.mario.x < this.platform.x + this.platform.width &&
-      this.mario.y + this.mario.height + this.mario.dy >= this.platform.y
-    );
-  };
+  marioPlatformCollision(): void {
+    this.platforms.forEach((platform) => {
+      if (
+        this.mario.x + this.mario.width > platform.x &&
+        this.mario.x < platform.x + platform.width &&
+        this.mario.y + this.mario.height + this.mario.dy >= platform.y
+      ) {
+        this.mario.dy = 0;
+      }
+    });
+  }
 
   setupEventListener() {
     addEventListener("keydown", (e) => {
@@ -109,13 +134,9 @@ export class World {
         this.keys.right = true;
         return;
       }
-      if (
-        e.code === "Space" &&
-        !this.keys.space &&
-        this.mario.y + this.mario.height + this.mario.dy >= CANVAS_HEIGHT - 33
-      ) {
+      if (e.code === "Space" && !this.keys.space) {
         this.keys.space = true;
-        this.mario.dy -= 20;
+        this.mario.dy -= 18;
       }
     });
 
