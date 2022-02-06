@@ -9,15 +9,19 @@ interface Keys {
 }
 
 const maxMapWidth = MAP[0].length * 32;
+const pipes = [7, 8, 9, 10];
 
 export class World {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
   mario: Mario;
-  scrollOffset: number;
-  centerPos: number;
-  keys: Keys;
   platforms: Element[];
+  elements: {
+    [key: string]: Element[];
+  };
+  keys: Keys;
+  centerPos: number;
+  scrollOffset: number;
 
   constructor() {
     this.init();
@@ -32,7 +36,10 @@ export class World {
       x: 50,
       y: 100,
     });
-    this.platforms = [];
+    this.elements = {
+      platforms: [],
+      pipes: [],
+    };
     this.scrollOffset = 0;
     this.centerPos = 0;
     this.setupEventListener();
@@ -42,22 +49,28 @@ export class World {
   renderMap(): void {
     MAP.forEach((row, rIndex) => {
       row.forEach((column, cIndex) => {
-        switch (column) {
-          case 0:
-            break;
+        if (column === 0) return;
 
-          case 1:
-            this.platforms.push(
-              new Element({
-                x: cIndex * tileSize,
-                y: rIndex * tileSize,
-                type: 1,
-              })
-            );
-            break;
+        if (column === 1) {
+          this.elements["platforms"].push(
+            new Element({
+              x: cIndex * tileSize,
+              y: rIndex * tileSize,
+              type: column,
+            })
+          );
+          return;
+        }
 
-          default:
-            break;
+        if (pipes.includes(column)) {
+          this.elements["pipes"].push(
+            new Element({
+              x: cIndex * tileSize,
+              y: rIndex * tileSize,
+              type: column,
+            })
+          );
+          return;
         }
       });
     });
@@ -66,9 +79,13 @@ export class World {
   renderLoop(): void {
     this.ctx.clearRect(0, 0, maxMapWidth, this.canvas.height);
     this.mario.draw(this.ctx);
-    this.platforms.forEach((platform) => {
-      platform.draw(this.ctx);
-    });
+
+    for (const elem in this.elements) {
+      const element = this.elements[elem];
+      element.forEach((item) => {
+        item.draw(this.ctx);
+      });
+    }
   }
 
   gameLoop(): void {
@@ -113,7 +130,8 @@ export class World {
   }
 
   marioPlatformCollision(): void {
-    this.platforms.forEach((platform) => {
+    const { platforms } = this.elements;
+    platforms.forEach((platform) => {
       if (
         this.mario.x + this.mario.width > platform.x &&
         this.mario.x < platform.x + platform.width &&

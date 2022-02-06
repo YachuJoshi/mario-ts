@@ -15,7 +15,6 @@ export class Element {
   y: number;
   sX: number;
   sY: number;
-  type: number;
   height: number;
   width: number;
 
@@ -24,8 +23,7 @@ export class Element {
     this.y = props.y;
     this.width = 32;
     this.height = 32;
-    this.type = props.type;
-    this.sX = (this.type - 1) * this.width;
+    this.sX = (props.type - 1) * this.width;
     this.sY = 0;
   }
 
