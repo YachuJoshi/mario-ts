@@ -5,7 +5,6 @@ interface GameElement {
   y: number;
   width: number;
   height: number;
-  dy?: number;
 }
 
 export function createImage(src: string): HTMLImageElement {

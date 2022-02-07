@@ -15,7 +15,7 @@ export class Mario {
   height: number;
   dx: number;
   dy: number;
-  speed: number;
+  speed: 4;
   isMoving: boolean;
   isOnGround: boolean;
   direction: Direction;

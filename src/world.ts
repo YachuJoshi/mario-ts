@@ -3,6 +3,7 @@ import { tileSize } from "./constants";
 import { initCanvas } from "./canvas";
 import { Mario } from "./mario";
 import { Element } from "./element";
+import { Goomba } from "./goomba";
 import { getCollisionDirection, getTileMapIndex } from "./utils";
 
 interface Keys {
@@ -17,10 +18,10 @@ export class World {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
   mario: Mario;
-  platforms: Element[];
   elements: {
     [key: string]: Element[];
   };
+  goombas: Goomba[];
   keys: Keys;
   coins: number;
   centerPos: number;
@@ -44,6 +45,7 @@ export class World {
       pipes: [],
       blocks: [],
     };
+    this.goombas = [];
     this.scrollOffset = 0;
     this.centerPos = 0;
     this.setupEventListener();
@@ -55,6 +57,7 @@ export class World {
       row.forEach((column, cIndex) => {
         if (column === 0) return;
 
+        // 1 ( Platform )
         if (column === 1) {
           this.elements["platforms"].push(
             new Element({
@@ -66,7 +69,7 @@ export class World {
           return;
         }
 
-        // 2, 3, 4
+        // 2, 3, 4 ( Blocks )
         if (blocks.includes(column)) {
           this.elements["blocks"].push(
             new Element({
@@ -77,7 +80,7 @@ export class World {
           );
         }
 
-        // 7, 8, 9, 10
+        // 7, 8, 9, 10 ( Pipes )
         if (pipes.includes(column)) {
           this.elements["pipes"].push(
             new Element({
@@ -87,6 +90,16 @@ export class World {
             })
           );
           return;
+        }
+
+        // 12 ( Goomba )
+        if (column === 12) {
+          this.goombas.push(
+            new Goomba({
+              x: cIndex * tileSize,
+              y: rIndex * tileSize,
+            })
+          );
         }
       });
     });
@@ -102,6 +115,7 @@ export class World {
       });
     }
 
+    this.goombas.forEach((goomba) => goomba.draw(this.ctx));
     this.mario.draw(this.ctx);
   }
 
@@ -109,6 +123,7 @@ export class World {
     this.centerPos = this.scrollOffset + viewPort / 2 - 120;
     this.mario.update();
     this.moveMario();
+    this.goombas.forEach((goomba) => goomba.update());
   }
 
   animate = (): void => {
@@ -119,6 +134,7 @@ export class World {
     this.checkMarioPlatformCollision();
     this.checkMarioElementCollision(this.elements["pipes"]);
     this.checkMarioElementCollision(this.elements["blocks"]);
+    this.checkGoombaElementCollision(this.elements["pipes"]);
   };
 
   moveMario(): void {
@@ -203,6 +219,23 @@ export class World {
         this.mario.x -= 2;
         return;
       }
+    });
+  }
+
+  checkGoombaElementCollision(elementArray: Element[]): void {
+    elementArray.forEach((element) => {
+      this.goombas.forEach((goomba) => {
+        if (goomba.state === "dead") return;
+
+        // Check collision for alive goombas
+        const dir = getCollisionDirection(goomba, element);
+        if (!dir) return;
+
+        if (dir.left || dir.right) {
+          goomba.dx = -goomba.dx;
+          return;
+        }
+      });
     });
   }
 
