@@ -1,8 +1,11 @@
+import { tileSize } from "./constants";
+
 interface GameElement {
   x: number;
   y: number;
   width: number;
   height: number;
+  dy?: number;
 }
 
 export function createImage(src: string): HTMLImageElement {
@@ -26,15 +29,20 @@ export function getCollisionDirection(
     const leftDiff = elementB.x + elementB.width - elementA.x;
     const rightDiff = elementA.x + elementA.width - elementB.x;
 
-    const min = Math.min(bottomDiff, topDiff, leftDiff, rightDiff);
+    const offset = Math.min(bottomDiff, topDiff, leftDiff, rightDiff);
 
     return {
-      bottom: bottomDiff === min,
-      right: rightDiff === min,
-      left: leftDiff === min,
-      top: topDiff === min,
+      bottom: bottomDiff === offset,
+      right: rightDiff === offset,
+      left: leftDiff === offset,
+      top: topDiff === offset,
+      offset,
     };
   }
 
   return null;
+}
+
+export function getTileMapIndex(element: GameElement) {
+  return { row: element.y / tileSize, column: element.x / tileSize };
 }

@@ -17,6 +17,7 @@ export class Mario {
   dy: number;
   speed: number;
   isMoving: boolean;
+  isOnGround: boolean;
   direction: Direction;
 
   constructor(props: MarioProps) {
@@ -42,8 +43,7 @@ export class Mario {
 
     if (this.y + this.height + this.dy < CANVAS_HEIGHT) {
       this.dy += gravity;
-    } else {
-      this.dy = 0;
+      this.isOnGround = false;
     }
   }
 }

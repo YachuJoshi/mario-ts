@@ -2,8 +2,8 @@ export const tileSize = 32;
 export const mapElements = {
   0: "sky",
   1: "platform",
-  2: "coinBox",
-  3: "powerUpBox",
+  2: "coinBlock",
+  3: "powerUpBlock",
   4: "emptyBox",
   5: "flagPole",
   6: "flag",

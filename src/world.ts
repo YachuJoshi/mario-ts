@@ -3,7 +3,7 @@ import { tileSize } from "./constants";
 import { initCanvas } from "./canvas";
 import { Mario } from "./mario";
 import { Element } from "./element";
-import { getCollisionDirection } from "./utils";
+import { getCollisionDirection, getTileMapIndex } from "./utils";
 
 interface Keys {
   [key: string]: boolean;
@@ -11,6 +11,7 @@ interface Keys {
 
 const maxMapWidth = MAP[0].length * 32;
 const pipes = [7, 8, 9, 10];
+const blocks = [2, 3, 4];
 
 export class World {
   canvas: HTMLCanvasElement;
@@ -21,6 +22,7 @@ export class World {
     [key: string]: Element[];
   };
   keys: Keys;
+  coins: number;
   centerPos: number;
   scrollOffset: number;
 
@@ -40,6 +42,7 @@ export class World {
     this.elements = {
       platforms: [],
       pipes: [],
+      blocks: [],
     };
     this.scrollOffset = 0;
     this.centerPos = 0;
@@ -63,6 +66,18 @@ export class World {
           return;
         }
 
+        // 2, 3, 4
+        if (blocks.includes(column)) {
+          this.elements["blocks"].push(
+            new Element({
+              x: cIndex * tileSize,
+              y: rIndex * tileSize,
+              type: column,
+            })
+          );
+        }
+
+        // 7, 8, 9, 10
         if (pipes.includes(column)) {
           this.elements["pipes"].push(
             new Element({
@@ -101,37 +116,9 @@ export class World {
 
     this.renderLoop();
     this.gameLoop();
-    this.marioPlatformCollision();
-
-    this.elements["pipes"].forEach((pipe) => {
-      const dir = getCollisionDirection(this.mario, pipe);
-
-      if (!dir) return;
-
-      const { left, right, top, bottom } = dir;
-
-      if (left) {
-        this.mario.dx = 0;
-        this.mario.x += 2;
-        return;
-      }
-
-      if (right) {
-        this.mario.dx = 0;
-        this.mario.x -= 2;
-        return;
-      }
-
-      if (top) {
-        this.mario.dy *= 1;
-        return;
-      }
-
-      if (bottom) {
-        this.mario.y -= this.mario.dy;
-        this.mario.dy = 0;
-      }
-    });
+    this.checkMarioPlatformCollision();
+    this.checkMarioElementCollision(this.elements["pipes"]);
+    this.checkMarioElementCollision(this.elements["blocks"]);
   };
 
   moveMario(): void {
@@ -161,7 +148,7 @@ export class World {
     }
   }
 
-  marioPlatformCollision(): void {
+  checkMarioPlatformCollision(): void {
     const { platforms } = this.elements;
     platforms.forEach((platform) => {
       if (
@@ -170,6 +157,51 @@ export class World {
         this.mario.y + this.mario.height + this.mario.dy >= platform.y
       ) {
         this.mario.dy = 0;
+      }
+    });
+  }
+
+  checkMarioElementCollision(elementArray: Element[]): void {
+    elementArray.forEach((element) => {
+      const dir = getCollisionDirection(this.mario, element);
+
+      if (!dir) return;
+      const { left, right, top, bottom, offset } = dir;
+
+      if (top) {
+        // If element is a block ( Coin, Powerup, Empty )
+        if (blocks.includes(element.type)) {
+          this.mario.y += offset * 1.2;
+          this.mario.dy = -this.mario.dy;
+
+          // Change to empty block after hit
+          if (element.type === 2 || element.type === 3) {
+            const { row, column } = getTileMapIndex(element);
+            MAP[row][column] = 4;
+            element.type = 4;
+          }
+
+          return;
+        }
+        return;
+      }
+
+      if (bottom) {
+        this.mario.y -= offset;
+        this.mario.dy = 0;
+        return;
+      }
+
+      this.mario.dx = 0;
+
+      if (left) {
+        this.mario.x += 2;
+        return;
+      }
+
+      if (right) {
+        this.mario.x -= 2;
+        return;
       }
     });
   }

@@ -17,17 +17,19 @@ export class Element {
   sY: number;
   height: number;
   width: number;
+  type: number;
 
   constructor(props: ElementProps) {
     this.x = props.x;
     this.y = props.y;
     this.width = 32;
     this.height = 32;
-    this.sX = (props.type - 1) * this.width;
+    this.type = props.type;
     this.sY = 0;
   }
 
   draw(ctx: CanvasRenderingContext2D): void {
+    this.sX = (this.type - 1) * this.width;
     ctx.drawImage(
       elementImage,
       this.sX,
