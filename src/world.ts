@@ -26,6 +26,7 @@ export class World {
   coins: number;
   centerPos: number;
   scrollOffset: number;
+  gameAnimationFrame: number;
 
   constructor() {
     this.init();
@@ -100,6 +101,7 @@ export class World {
               y: rIndex * tileSize,
             })
           );
+          MAP[rIndex][cIndex] = 0;
         }
       });
     });
@@ -127,7 +129,7 @@ export class World {
   }
 
   animate = (): void => {
-    requestAnimationFrame(this.animate);
+    this.gameAnimationFrame = requestAnimationFrame(this.animate);
 
     this.renderLoop();
     this.gameLoop();
@@ -135,6 +137,7 @@ export class World {
     this.checkMarioElementCollision(this.elements["pipes"]);
     this.checkMarioElementCollision(this.elements["blocks"]);
     this.checkGoombaElementCollision(this.elements["pipes"]);
+    this.checkMarioGoombaCollision();
   };
 
   moveMario(): void {
@@ -236,6 +239,55 @@ export class World {
           return;
         }
       });
+    });
+  }
+
+  checkMarioGoombaCollision() {
+    this.goombas.forEach((goomba, index) => {
+      if (goomba.state === "dead") return;
+
+      const dir = getCollisionDirection(this.mario, goomba);
+      if (!dir) return;
+
+      const { left, right, bottom, offset } = dir;
+
+      if (bottom) {
+        goomba.state = "dead";
+        this.mario.dy = -16;
+
+        setTimeout(() => {
+          this.goombas.splice(index, 1);
+        }, 800);
+        return;
+      }
+
+      if (left || right) {
+        if (this.mario.category === "small") {
+          cancelAnimationFrame(this.gameAnimationFrame);
+
+          // setTimeout(() => {
+          //   this.init();
+          // }, 2000);
+
+          return;
+        }
+
+        goomba.dx = -goomba.dx;
+        this.mario.isInvulnerable = true;
+        setTimeout(() => {
+          this.mario.isInvulnerable = false;
+        }, 1000);
+
+        if (this.mario.category === "big") {
+          this.mario.category = "small";
+          return;
+        }
+
+        if (this.mario.category === "super") {
+          this.mario.category = "big";
+          return;
+        }
+      }
     });
   }
 

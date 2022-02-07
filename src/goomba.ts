@@ -57,17 +57,30 @@ export class Goomba {
   }
 
   update(): void {
-    this.x += this.dx;
-    this.tick++;
+    if (this.state === "alive") {
+      this.x += this.dx;
+      this.tick++;
 
-    if (this.tick > this.maxTick) {
-      this.tick = 0;
+      if (this.tick > this.maxTick) {
+        this.tick = 0;
 
-      if (this.frames === 0) {
-        this.frames = 1;
-      } else {
-        this.frames = 0;
+        if (this.frames === 0) {
+          this.frames = 1;
+        } else {
+          this.frames = 0;
+        }
       }
+      return;
+    }
+
+    if (this.state === "dead") {
+      this.tick++;
+      this.frames = 2;
+
+      if (this.tick > 45) {
+        this.frames = 4;
+      }
+      return;
     }
   }
 }

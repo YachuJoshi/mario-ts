@@ -19,6 +19,8 @@ export class Mario {
   isMoving: boolean;
   isOnGround: boolean;
   direction: Direction;
+  isInvulnerable: boolean;
+  category: "small" | "big" | "super";
 
   constructor(props: MarioProps) {
     this.x = props.x;
@@ -28,6 +30,8 @@ export class Mario {
     this.dx = 0;
     this.dy = 0;
     this.speed = 4;
+    this.isInvulnerable = false;
+    this.category = "big";
     this.isMoving = this.dx !== 0;
     this.direction = !this.isMoving ? "idle" : this.dx > 0 ? "right" : "left";
   }
