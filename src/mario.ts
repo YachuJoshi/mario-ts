@@ -1,4 +1,3 @@
-import { CANVAS_HEIGHT } from "./base";
 import { createImage } from "./utils";
 import marioImg from "./images/mario.png";
 
@@ -8,7 +7,6 @@ interface MarioProps {
 }
 
 type MarioCategory = "small" | "big" | "super";
-const gravity = 1.2;
 const marioSprite = createImage(marioImg);
 
 export class Mario {
@@ -96,10 +94,5 @@ export class Mario {
   update(): void {
     this.x += this.dx;
     this.y += this.dy;
-
-    if (this.y + this.height + this.dy < CANVAS_HEIGHT) {
-      this.dy += gravity;
-      this.isOnGround = false;
-    }
   }
 }

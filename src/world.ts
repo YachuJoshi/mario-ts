@@ -1,4 +1,4 @@
-import { CANVAS_WIDTH as viewPort, MAP } from "./base";
+import { CANVAS_HEIGHT, CANVAS_WIDTH as viewPort, MAP } from "./base";
 import { tileSize } from "./constants";
 import { initCanvas } from "./canvas";
 import { Mario } from "./mario";
@@ -10,7 +10,8 @@ interface Keys {
   [key: string]: boolean;
 }
 
-const maxMapWidth = MAP[0].length * 32;
+const maxMapWidth = MAP[0].length * tileSize;
+const gravity = 1.2;
 const pipes = [7, 8, 9, 10];
 const blocks = [2, 3, 4];
 
@@ -122,12 +123,19 @@ export class World {
     this.mario.draw(this.ctx);
   }
 
-  gameLoop(): void {
+  gameLoop = (): void => {
     this.centerPos = this.scrollOffset + viewPort / 2 - 120;
     this.mario.update();
     this.moveMario();
     this.goombas.forEach((goomba) => goomba.update());
-  }
+
+    if (this.mario.y + this.mario.height + this.mario.dy < CANVAS_HEIGHT) {
+      this.mario.dy += gravity;
+      this.mario.isOnGround = false;
+    } else if (this.mario.y - 32 > CANVAS_HEIGHT) {
+      cancelAnimationFrame(this.gameAnimationFrame);
+    }
+  };
 
   start = (): void => {
     this.gameAnimationFrame = requestAnimationFrame(this.start);
@@ -165,7 +173,7 @@ export class World {
     if (this.keys.right) {
       if (this.mario.x >= maxMapWidth - 75) return;
 
-      if (this.mario.x < maxMapWidth - this.centerPos) {
+      if (this.mario.x < maxMapWidth - viewPort / 2 - 160) {
         this.scrollOffset += 4;
         this.ctx.translate(-this.mario.speed, 0);
         return;
@@ -228,15 +236,17 @@ export class World {
         return;
       }
 
-      this.mario.dx = 0;
-
       if (left) {
-        this.mario.x += 2;
+        this.mario.x += offset;
+
+        if (this.lastKey === "left") this.mario.dx = 0;
         return;
       }
 
       if (right) {
-        this.mario.x -= 2;
+        this.mario.x -= offset;
+
+        if (this.lastKey === "right") this.mario.dx = 0;
         return;
       }
     });
@@ -271,7 +281,7 @@ export class World {
 
       if (bottom) {
         goomba.state = "dead";
-        this.mario.dy = -16;
+        this.mario.dy = -18;
 
         setTimeout(() => {
           this.goombas.splice(index, 1);
@@ -399,7 +409,7 @@ export class World {
         this.mario.isOnGround
       ) {
         this.keys.space = true;
-        this.mario.dy -= 16;
+        this.mario.dy -= 18;
       }
     });
 
