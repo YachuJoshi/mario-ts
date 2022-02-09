@@ -163,10 +163,21 @@ export class World {
 
     // MarioPos >= centerPos
     if (this.keys.right) {
-      this.scrollOffset += 4;
-      this.ctx.translate(-this.mario.speed, 0);
-      return;
+      if (this.mario.x >= maxMapWidth - 75) return;
+
+      if (this.mario.x < maxMapWidth - this.centerPos) {
+        this.scrollOffset += 4;
+        this.ctx.translate(-this.mario.speed, 0);
+        return;
+      }
+
+      if (this.mario.x > maxMapWidth - this.centerPos) {
+        this.mario.dx = this.mario.speed;
+        return;
+      }
     }
+
+    return;
   }
 
   checkMarioPlatformCollision(): void {
