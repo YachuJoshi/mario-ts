@@ -26,6 +26,7 @@ export class World {
   coins: number;
   centerPos: number;
   scrollOffset: number;
+  lastKey: string;
   gameAnimationFrame: number;
 
   constructor() {
@@ -138,6 +139,7 @@ export class World {
     this.checkMarioElementCollision(this.elements["blocks"]);
     this.checkGoombaElementCollision(this.elements["pipes"]);
     this.checkMarioGoombaCollision();
+    this.updateMarioSprite();
   };
 
   moveMario(): void {
@@ -175,6 +177,8 @@ export class World {
         this.mario.x < platform.x + platform.width &&
         this.mario.y + this.mario.height + this.mario.dy >= platform.y
       ) {
+        this.mario.isJumping = false;
+        this.mario.isOnGround = true;
         this.mario.dy = 0;
       }
     });
@@ -206,6 +210,8 @@ export class World {
       }
 
       if (bottom) {
+        this.mario.isJumping = false;
+        this.mario.isOnGround = true;
         this.mario.y -= offset;
         this.mario.dy = 0;
         return;
@@ -246,10 +252,10 @@ export class World {
     this.goombas.forEach((goomba, index) => {
       if (goomba.state === "dead") return;
 
-      const dir = getCollisionDirection(this.mario, goomba);
+      let dir = getCollisionDirection(this.mario, goomba);
       if (!dir) return;
 
-      const { left, right, bottom, offset } = dir;
+      const { left, right, bottom } = dir;
 
       if (bottom) {
         goomba.state = "dead";
@@ -272,6 +278,7 @@ export class World {
           return;
         }
 
+        dir = null;
         goomba.dx = -goomba.dx;
         this.mario.isInvulnerable = true;
         setTimeout(() => {
@@ -291,19 +298,90 @@ export class World {
     });
   }
 
+  updateMarioSprite(): void {
+    this.mario.updateSprite();
+
+    if (this.keys.space) {
+      this.mario.isJumping = true;
+      this.mario.isOnGround = false;
+
+      if (this.mario.frames === 0 || this.mario.frames === 1) {
+        // Right Jump
+        this.mario.frames = 3;
+        return;
+      }
+
+      if (this.mario.frames === 8 || this.mario.frames === 9) {
+        // Left Jump
+        this.mario.frames = 2;
+        return;
+      }
+
+      return;
+    }
+
+    if (this.keys.right) {
+      if (!this.mario.isJumping) {
+        this.mario.tick += 1;
+
+        if (this.mario.tick > this.mario.maxTick / this.mario.speed) {
+          this.mario.tick = 0;
+
+          if (this.mario.frames === 0) {
+            this.mario.frames = 1;
+          } else {
+            this.mario.frames = 0;
+          }
+        }
+      }
+      return;
+    }
+
+    if (this.keys.left) {
+      if (!this.mario.isJumping) {
+        this.mario.tick += 1;
+
+        if (this.mario.tick > this.mario.maxTick / this.mario.speed) {
+          this.mario.tick = 0;
+
+          if (this.mario.frames === 9) {
+            this.mario.frames = 8;
+          } else {
+            this.mario.frames = 9;
+          }
+        }
+      }
+      return;
+    }
+
+    if (this.mario.dx === 0 && this.mario.isOnGround) {
+      if (this.lastKey === "right") {
+        this.mario.frames = 0;
+        return;
+      }
+
+      if (this.lastKey === "left") {
+        this.mario.frames = 8;
+        return;
+      }
+    }
+  }
+
   setupEventListener() {
     addEventListener("keydown", (e) => {
       if (e.code === "KeyA") {
         this.keys.left = true;
+        this.lastKey = "left";
         return;
       }
       if (e.code === "KeyD") {
         this.keys.right = true;
+        this.lastKey = "right";
         return;
       }
       if (e.code === "Space" && !this.keys.space) {
         this.keys.space = true;
-        this.mario.dy -= 18;
+        this.mario.dy -= 16;
       }
     });
 
