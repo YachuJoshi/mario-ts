@@ -129,8 +129,8 @@ export class World {
     this.goombas.forEach((goomba) => goomba.update());
   }
 
-  animate = (): void => {
-    this.gameAnimationFrame = requestAnimationFrame(this.animate);
+  start = (): void => {
+    this.gameAnimationFrame = requestAnimationFrame(this.start);
 
     this.renderLoop();
     this.gameLoop();

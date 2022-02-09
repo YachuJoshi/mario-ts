@@ -7,7 +7,6 @@ interface MarioProps {
   y: number;
 }
 
-type Direction = "left" | "right" | "idle";
 type MarioCategory = "small" | "big" | "super";
 const gravity = 1.2;
 const marioSprite = createImage(marioImg);
@@ -22,10 +21,8 @@ export class Mario {
   dx: number;
   dy: number;
   speed: 4;
-  isMoving: boolean;
   isJumping: boolean;
   isOnGround: boolean;
-  direction: Direction;
   isInvulnerable: boolean;
   frames: number;
   tick: number;
@@ -46,8 +43,6 @@ export class Mario {
     this.category = "big";
     this.isJumping = false;
     this.isOnGround = false;
-    this.isMoving = this.dx !== 0;
-    this.direction = !this.isMoving ? "idle" : this.dx > 0 ? "right" : "left";
     this.frames = 0;
     this.tick = 0;
     this.maxTick = 25;
