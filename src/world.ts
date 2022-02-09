@@ -253,6 +253,7 @@ export class World {
       if (goomba.state === "dead") return;
 
       let dir = getCollisionDirection(this.mario, goomba);
+
       if (!dir) return;
 
       const { left, right, bottom } = dir;
@@ -264,6 +265,7 @@ export class World {
         setTimeout(() => {
           this.goombas.splice(index, 1);
         }, 800);
+
         return;
       }
 
@@ -379,7 +381,12 @@ export class World {
         this.lastKey = "right";
         return;
       }
-      if (e.code === "Space" && !this.keys.space) {
+      if (
+        e.code === "Space" &&
+        !this.keys.space &&
+        !this.mario.isJumping &&
+        this.mario.isOnGround
+      ) {
         this.keys.space = true;
         this.mario.dy -= 16;
       }
