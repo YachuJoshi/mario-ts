@@ -12,3 +12,15 @@ export const mapElements = {
   9: "pipeTopLeft",
   10: "pipeTopRight",
 };
+const audioElements = {
+  0: "coinAudio",
+  1: "jumpSmall",
+  2: "jumpBig",
+  3: "marioDie",
+  4: "powerDown",
+  5: "powerUp",
+  6: "powerUpAppear",
+  7: "stomp",
+  8: "themeSong",
+};
+export const mediaNames = Object.values(audioElements);

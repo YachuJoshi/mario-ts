@@ -4,6 +4,7 @@ import { initCanvas } from "./canvas";
 import { Mario } from "./mario";
 import { Element } from "./element";
 import { Goomba } from "./goomba";
+import { media } from "./media";
 import { getCollisionDirection, getTileMapIndex } from "./utils";
 
 interface Keys {
@@ -14,7 +15,6 @@ const maxMapWidth = MAP[0].length * tileSize;
 const gravity = 1.2;
 const pipes = [7, 8, 9, 10];
 const blocks = [2, 3, 4];
-
 export class World {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
@@ -53,6 +53,7 @@ export class World {
     this.centerPos = 0;
     this.setupEventListener();
     this.renderMap();
+    media["themeSong"].loop = true;
   }
 
   renderMap(): void {
@@ -103,7 +104,6 @@ export class World {
               y: rIndex * tileSize,
             })
           );
-          MAP[rIndex][cIndex] = 0;
         }
       });
     });
@@ -133,7 +133,12 @@ export class World {
       this.mario.dy += gravity;
       this.mario.isOnGround = false;
     } else if (this.mario.y - 32 > CANVAS_HEIGHT) {
+      media["marioDie"].play();
+      media["themeSong"].pause();
+      media["themeSong"].currentTime = 0;
       cancelAnimationFrame(this.gameAnimationFrame);
+
+      setTimeout(this.restart, 3000);
     }
   };
 
@@ -148,6 +153,11 @@ export class World {
     this.checkGoombaElementCollision(this.elements["pipes"]);
     this.checkMarioGoombaCollision();
     this.updateMarioSprite();
+  };
+
+  restart = (): void => {
+    this.init();
+    this.start();
   };
 
   moveMario(): void {
@@ -216,12 +226,15 @@ export class World {
           this.mario.y += offset * 1.2;
           this.mario.dy = -this.mario.dy;
 
+          if (element.type === 4) return;
+
+          if (element.type === 2) media["coinAudio"].play();
+          if (element.type === 3) media["powerUpAppear"].play();
+
           // Change to empty block after hit
-          if (element.type === 2 || element.type === 3) {
-            const { row, column } = getTileMapIndex(element);
-            MAP[row][column] = 4;
-            element.type = 4;
-          }
+          const { row, column } = getTileMapIndex(element);
+          MAP[row][column] = 4;
+          element.type = 4;
 
           return;
         }
@@ -272,16 +285,19 @@ export class World {
   checkMarioGoombaCollision() {
     this.goombas.forEach((goomba, index) => {
       if (goomba.state === "dead") return;
+      if (this.mario.isInvulnerable) return;
 
       let dir = getCollisionDirection(this.mario, goomba);
 
       if (!dir) return;
 
-      const { left, right, bottom } = dir;
+      const { left, right, bottom, offset } = dir;
+      console.log(dir);
 
       if (bottom) {
         goomba.state = "dead";
         this.mario.dy = -18;
+        media["stomp"].play();
 
         setTimeout(() => {
           this.goombas.splice(index, 1);
@@ -290,13 +306,14 @@ export class World {
         return;
       }
 
-      if (left || right) {
+      if ((left || right) && offset > 4) {
         if (this.mario.category === "small") {
+          media["marioDie"].play();
+          media["themeSong"].pause();
+          media["themeSong"].currentTime = 0;
           cancelAnimationFrame(this.gameAnimationFrame);
 
-          // setTimeout(() => {
-          //   this.init();
-          // }, 2000);
+          setTimeout(this.restart, 3000);
 
           return;
         }
@@ -304,6 +321,7 @@ export class World {
         dir = null;
         goomba.dx = -goomba.dx;
         this.mario.isInvulnerable = true;
+        media["powerDown"].play();
         setTimeout(() => {
           this.mario.isInvulnerable = false;
         }, 1000);
@@ -391,6 +409,10 @@ export class World {
   }
 
   setupEventListener() {
+    this.canvas.addEventListener("click", () => {
+      media["themeSong"].play();
+    });
+
     addEventListener("keydown", (e) => {
       if (e.code === "KeyA") {
         this.keys.left = true;
@@ -410,6 +432,13 @@ export class World {
       ) {
         this.keys.space = true;
         this.mario.dy -= 18;
+
+        // Play Audio
+        if (this.mario.category === "small") {
+          media["jumpSmall"].play();
+          return;
+        }
+        media["jumpBig"].play();
       }
     });
 

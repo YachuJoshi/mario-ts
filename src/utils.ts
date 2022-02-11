@@ -13,6 +13,12 @@ export function createImage(src: string): HTMLImageElement {
   return image;
 }
 
+export function createAudioElement(src: string): HTMLAudioElement {
+  const audio = new Audio();
+  audio.src = src;
+  return audio;
+}
+
 export function getCollisionDirection(
   elementA: GameElement,
   elementB: GameElement
