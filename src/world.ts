@@ -15,6 +15,7 @@ interface Keys {
 const maxMapWidth = MAP[0].length * tileSize;
 const gravity = 0.8;
 const blocks = [2, 3, 4];
+const flags = [5, 6];
 const pipes = [7, 8, 9, 10];
 export class World {
   canvas: HTMLCanvasElement;
@@ -30,6 +31,8 @@ export class World {
   centerPos: number;
   scrollOffset: number;
   lastKey: string;
+  isGameActive: boolean;
+  marioInGround: boolean;
   gameAnimationFrame: number;
 
   constructor() {
@@ -49,6 +52,7 @@ export class World {
       platforms: [],
       pipes: [],
       blocks: [],
+      flags: [],
     };
     this.goombas = [];
     this.powerUps = [];
@@ -57,6 +61,7 @@ export class World {
     this.scrollOffset = 0;
     this.setupEventListener();
     this.renderMap();
+    this.isGameActive = true;
     media["themeSong"].loop = true;
     media["themeSong"].volume = 0.6;
   }
@@ -81,6 +86,17 @@ export class World {
         // 2, 3, 4 ( Blocks )
         if (blocks.includes(column)) {
           this.elements["blocks"].push(
+            new Element({
+              x: cIndex * tileSize,
+              y: rIndex * tileSize,
+              type: column,
+            })
+          );
+        }
+
+        // 5, 6 ( FlagPole & Flag )
+        if (flags.includes(column)) {
+          this.elements["flags"].push(
             new Element({
               x: cIndex * tileSize,
               y: rIndex * tileSize,
@@ -139,10 +155,13 @@ export class World {
       powerUp.dy += gravity;
     });
 
+    this.marioInGround = this.mario.isOnGround;
+
     if (this.mario.y + this.mario.height + this.mario.dy < CANVAS_HEIGHT) {
       this.mario.dy += gravity;
       this.mario.isOnGround = false;
     } else if (this.mario.y - 32 > CANVAS_HEIGHT) {
+      this.isGameActive = false;
       media["marioDie"].play();
       media["themeSong"].pause();
       media["themeSong"].currentTime = 0;
@@ -157,7 +176,6 @@ export class World {
 
     this.renderLoop();
     this.gameLoop();
-    this.checkMarioPlatformCollision();
     this.checkMarioElementCollision(this.elements["pipes"]);
     this.checkMarioElementCollision(this.elements["blocks"]);
     this.checkGoombaElementCollision(this.elements["pipes"]);
@@ -167,6 +185,8 @@ export class World {
     this.checkMarioGoombaCollision();
     this.checkMarioPowerUpCollision();
     this.updateMarioSprite();
+    this.checkMarioFlagCollision();
+    this.checkMarioPlatformCollision();
   };
 
   restart = (): void => {
@@ -291,23 +311,6 @@ export class World {
     });
   }
 
-  checkGoombaElementCollision(elementArray: Element[]): void {
-    elementArray.forEach((element) => {
-      this.goombas.forEach((goomba) => {
-        if (goomba.state === "dead") return;
-
-        // Check collision for alive goombas
-        const dir = getCollisionDirection(goomba, element);
-        if (!dir) return;
-
-        if (dir.left || dir.right) {
-          goomba.dx = -goomba.dx;
-          return;
-        }
-      });
-    });
-  }
-
   checkMarioGoombaCollision(): void {
     this.goombas.forEach((goomba, index) => {
       if (goomba.state === "dead") return;
@@ -335,6 +338,7 @@ export class World {
       if ((left || right) && offset > 4) {
         if (this.mario.category === "small") {
           this.mario.frames = 13;
+          this.isGameActive = false;
           media["marioDie"].play();
           media["themeSong"].pause();
           media["themeSong"].currentTime = 0;
@@ -363,6 +367,78 @@ export class World {
           return;
         }
       }
+    });
+  }
+
+  checkMarioPowerUpCollision(): void {
+    this.powerUps.forEach((powerUp, index) => {
+      const dir = getCollisionDirection(this.mario, powerUp);
+
+      if (!dir) return;
+
+      media["powerUp"].play();
+      this.powerUps.splice(index, 1);
+
+      if (this.mario.category === "small") {
+        this.mario.category = "big";
+        this.mario.y -= 16;
+        return;
+      }
+
+      if (this.mario.category === "big") {
+        this.mario.category = "super";
+        return;
+      }
+    });
+  }
+
+  checkMarioFlagCollision(): void {
+    const { flags } = this.elements;
+    flags.forEach((flag) => {
+      const dir = getCollisionDirection(this.mario, flag);
+      if (!dir) return;
+
+      const { left, right } = dir;
+
+      this.mario.dx = 0;
+      this.mario.dy = 2;
+
+      if (left) {
+        this.mario.frames = 10;
+      }
+      if (right) {
+        this.mario.frames = 11;
+      }
+
+      if (this.marioInGround) {
+        this.mario.tick++;
+
+        if (this.mario.tick > this.mario.maxTick) {
+          this.mario.x += 10;
+          this.mario.frames = 12;
+          this.isGameActive = false;
+
+          setTimeout(() => cancelAnimationFrame(this.gameAnimationFrame), 100);
+        }
+      }
+      media["stageClear"].play();
+    });
+  }
+
+  checkGoombaElementCollision(elementArray: Element[]): void {
+    elementArray.forEach((element) => {
+      this.goombas.forEach((goomba) => {
+        if (goomba.state === "dead") return;
+
+        // Check collision for alive goombas
+        const dir = getCollisionDirection(goomba, element);
+        if (!dir) return;
+
+        if (dir.left || dir.right) {
+          goomba.dx = -goomba.dx;
+          return;
+        }
+      });
     });
   }
 
@@ -414,28 +490,6 @@ export class World {
           powerUp.dy = 0;
         }
       });
-    });
-  }
-
-  checkMarioPowerUpCollision(): void {
-    this.powerUps.forEach((powerUp, index) => {
-      const dir = getCollisionDirection(this.mario, powerUp);
-
-      if (!dir) return;
-
-      media["powerUp"].play();
-      this.powerUps.splice(index, 1);
-
-      if (this.mario.category === "small") {
-        this.mario.category = "big";
-        this.mario.y -= 16;
-        return;
-      }
-
-      if (this.mario.category === "big") {
-        this.mario.category = "super";
-        return;
-      }
     });
   }
 
@@ -532,6 +586,8 @@ export class World {
       ) {
         this.keys.space = true;
         this.mario.dy -= 13;
+
+        if (!this.isGameActive) return;
 
         // Play Audio
         if (this.mario.category === "small") {

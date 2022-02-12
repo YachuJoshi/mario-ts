@@ -6,6 +6,7 @@ import powerDown from "./audio/power-down.wav";
 import powerUp from "./audio/power-up.wav";
 import powerUpAppear from "./audio/power-up-appear.wav";
 import stomp from "./audio/stomp.wav";
+import stageClear from "./audio/stage-clear.wav";
 import themeSong from "./audio/theme-song.mp3";
 
 import { mediaNames } from "./constants";
@@ -24,6 +25,7 @@ const mediaSources = [
   powerUp,
   powerUpAppear,
   stomp,
+  stageClear,
   themeSong,
 ];
 
