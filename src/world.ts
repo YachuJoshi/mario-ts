@@ -420,6 +420,8 @@ export class World {
           setTimeout(() => cancelAnimationFrame(this.gameAnimationFrame), 100);
         }
       }
+      media["themeSong"].pause();
+      media["themeSong"].currentTime = 0;
       media["stageClear"].play();
     });
   }
@@ -562,9 +564,9 @@ export class World {
   }
 
   setupEventListener() {
-    // this.canvas.addEventListener("click", () => {
-    //   media["themeSong"].play();
-    // });
+    this.canvas.addEventListener("click", () => {
+      media["themeSong"].play();
+    });
 
     addEventListener("keydown", (e) => {
       if (e.code === "KeyA") {
