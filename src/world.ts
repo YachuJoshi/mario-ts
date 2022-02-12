@@ -4,6 +4,7 @@ import { initCanvas } from "./canvas";
 import { Mario } from "./mario";
 import { Element } from "./element";
 import { Goomba } from "./goomba";
+import { PowerUp } from "./powerup";
 import { media } from "./media";
 import { getCollisionDirection, getTileMapIndex } from "./utils";
 
@@ -13,17 +14,18 @@ interface Keys {
 
 const maxMapWidth = MAP[0].length * tileSize;
 const gravity = 0.8;
-const pipes = [7, 8, 9, 10];
 const blocks = [2, 3, 4];
+const pipes = [7, 8, 9, 10];
 export class World {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
   mario: Mario;
+  keys: Keys;
   elements: {
     [key: string]: Element[];
   };
   goombas: Goomba[];
-  keys: Keys;
+  powerUps: PowerUp[];
   coins: number;
   centerPos: number;
   scrollOffset: number;
@@ -49,12 +51,14 @@ export class World {
       blocks: [],
     };
     this.goombas = [];
+    this.powerUps = [];
     this.centerPos = 0;
     this.lastKey = "right";
     this.scrollOffset = 0;
     this.setupEventListener();
     this.renderMap();
     media["themeSong"].loop = true;
+    media["themeSong"].volume = 0.6;
   }
 
   renderMap(): void {
@@ -121,6 +125,7 @@ export class World {
     }
 
     this.goombas.forEach((goomba) => goomba.draw(this.ctx));
+    this.powerUps.forEach((powerUp) => powerUp.draw(this.ctx));
     this.mario.draw(this.ctx);
   }
 
@@ -129,6 +134,10 @@ export class World {
     this.mario.update();
     this.moveMario();
     this.goombas.forEach((goomba) => goomba.update());
+    this.powerUps.forEach((powerUp) => {
+      powerUp.update();
+      powerUp.dy += gravity;
+    });
 
     if (this.mario.y + this.mario.height + this.mario.dy < CANVAS_HEIGHT) {
       this.mario.dy += gravity;
@@ -152,7 +161,11 @@ export class World {
     this.checkMarioElementCollision(this.elements["pipes"]);
     this.checkMarioElementCollision(this.elements["blocks"]);
     this.checkGoombaElementCollision(this.elements["pipes"]);
+    this.checkPowerUpElementCollision(this.elements["blocks"]);
+    this.checkPowerUpElementCollision(this.elements["pipes"]);
+    this.checkPowerUpPlatformCollision();
     this.checkMarioGoombaCollision();
+    this.checkMarioPowerUpCollision();
     this.updateMarioSprite();
   };
 
@@ -229,12 +242,24 @@ export class World {
 
           if (element.type === 4) return;
 
-          if (element.type === 2) media["coinAudio"].play();
-          if (element.type === 3) media["powerUpAppear"].play();
+          if (element.type === 2) {
+            media["coinAudio"].play();
+          }
+          if (element.type === 3) {
+            const { row, column } = getTileMapIndex(element);
+            const type =
+              this.mario.category === "small" ? "mushroom" : "flower";
+            this.powerUps.push(
+              new PowerUp({
+                x: column * tileSize,
+                y: (row - 1) * tileSize,
+                type,
+              })
+            );
+            media["powerUpAppear"].play();
+          }
 
           // Change to empty block after hit
-          const { row, column } = getTileMapIndex(element);
-          MAP[row][column] = 4;
           element.type = 4;
 
           return;
@@ -283,7 +308,7 @@ export class World {
     });
   }
 
-  checkMarioGoombaCollision() {
+  checkMarioGoombaCollision(): void {
     this.goombas.forEach((goomba, index) => {
       if (goomba.state === "dead") return;
       if (this.mario.isInvulnerable) return;
@@ -297,7 +322,7 @@ export class World {
 
       if (bottom) {
         goomba.state = "dead";
-        this.mario.dy = -14;
+        this.mario.dy = -8;
         media["stomp"].play();
 
         setTimeout(() => {
@@ -337,6 +362,79 @@ export class World {
           this.mario.category = "big";
           return;
         }
+      }
+    });
+  }
+
+  checkPowerUpElementCollision(elementArray: Element[]): void {
+    elementArray.forEach((element) => {
+      this.powerUps.forEach((powerUp) => {
+        const dir = getCollisionDirection(powerUp, element);
+
+        if (!dir) return;
+
+        const { left, right, top, bottom, offset } = dir;
+
+        if (top) return;
+
+        if (bottom) {
+          // If element is a block ( Coin, Powerup, Empty )
+          if (blocks.includes(element.type) || pipes.includes(element.type)) {
+            powerUp.y -= offset;
+            powerUp.dy = 0;
+            return;
+          }
+        }
+
+        // Left or Right
+        powerUp.dx = -powerUp.dx;
+
+        if (left) {
+          powerUp.x += offset;
+          return;
+        }
+
+        if (right) {
+          powerUp.x -= offset;
+          return;
+        }
+      });
+    });
+  }
+
+  checkPowerUpPlatformCollision() {
+    const { platforms } = this.elements;
+    this.powerUps.forEach((powerUp) => {
+      platforms.forEach((platform) => {
+        if (
+          powerUp.x + powerUp.width > platform.x &&
+          powerUp.x < platform.x + platform.width &&
+          powerUp.y + powerUp.height + powerUp.dy >= platform.y
+        ) {
+          powerUp.dy = 0;
+        }
+      });
+    });
+  }
+
+  checkMarioPowerUpCollision(): void {
+    this.powerUps.forEach((powerUp, index) => {
+      const dir = getCollisionDirection(this.mario, powerUp);
+
+      if (!dir) return;
+
+      media["powerUp"].play();
+      this.powerUps.splice(index, 1);
+
+      if (this.mario.category === "small") {
+        this.mario.category = "big";
+        this.mario.y -= 16;
+        return;
+      }
+
+      if (this.mario.category === "big") {
+        this.mario.category = "super";
+        return;
       }
     });
   }
@@ -411,9 +509,9 @@ export class World {
   }
 
   setupEventListener() {
-    this.canvas.addEventListener("click", () => {
-      media["themeSong"].play();
-    });
+    // this.canvas.addEventListener("click", () => {
+    //   media["themeSong"].play();
+    // });
 
     addEventListener("keydown", (e) => {
       if (e.code === "KeyA") {
