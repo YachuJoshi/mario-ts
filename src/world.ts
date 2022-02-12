@@ -12,7 +12,7 @@ interface Keys {
 }
 
 const maxMapWidth = MAP[0].length * tileSize;
-const gravity = 1.2;
+const gravity = 0.8;
 const pipes = [7, 8, 9, 10];
 const blocks = [2, 3, 4];
 export class World {
@@ -49,8 +49,9 @@ export class World {
       blocks: [],
     };
     this.goombas = [];
-    this.scrollOffset = 0;
     this.centerPos = 0;
+    this.lastKey = "right";
+    this.scrollOffset = 0;
     this.setupEventListener();
     this.renderMap();
     media["themeSong"].loop = true;
@@ -296,7 +297,7 @@ export class World {
 
       if (bottom) {
         goomba.state = "dead";
-        this.mario.dy = -18;
+        this.mario.dy = -14;
         media["stomp"].play();
 
         setTimeout(() => {
@@ -308,6 +309,7 @@ export class World {
 
       if ((left || right) && offset > 4) {
         if (this.mario.category === "small") {
+          this.mario.frames = 13;
           media["marioDie"].play();
           media["themeSong"].pause();
           media["themeSong"].currentTime = 0;
@@ -431,7 +433,7 @@ export class World {
         this.mario.isOnGround
       ) {
         this.keys.space = true;
-        this.mario.dy -= 18;
+        this.mario.dy -= 13;
 
         // Play Audio
         if (this.mario.category === "small") {
