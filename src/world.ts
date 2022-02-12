@@ -182,11 +182,11 @@ export class World {
     this.checkPowerUpElementCollision(this.elements["blocks"]);
     this.checkPowerUpElementCollision(this.elements["pipes"]);
     this.checkPowerUpPlatformCollision();
-    this.checkMarioGoombaCollision();
     this.checkMarioPowerUpCollision();
     this.updateMarioSprite();
     this.checkMarioFlagCollision();
     this.checkMarioPlatformCollision();
+    this.checkMarioGoombaCollision();
   };
 
   restart = (): void => {
@@ -321,7 +321,6 @@ export class World {
       if (!dir) return;
 
       const { left, right, bottom, offset } = dir;
-      console.log(dir);
 
       if (bottom) {
         goomba.state = "dead";
@@ -342,8 +341,8 @@ export class World {
           media["marioDie"].play();
           media["themeSong"].pause();
           media["themeSong"].currentTime = 0;
-          cancelAnimationFrame(this.gameAnimationFrame);
 
+          cancelAnimationFrame(this.gameAnimationFrame);
           setTimeout(this.restart, 3000);
 
           return;

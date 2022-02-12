@@ -88,7 +88,7 @@ export class Mario {
     }
 
     // Super source Y
-    this.sY = 150;
+    this.sY = 152;
   }
 
   update(): void {
