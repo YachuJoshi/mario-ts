@@ -1,1 +1,1 @@
-## Vanilla TS Boilerplate
+## Super Mario Bros created in Vanilla TypeScript
