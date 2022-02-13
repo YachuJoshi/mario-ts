@@ -200,9 +200,9 @@ export class World {
     this.checkMarioPowerUpCollision();
     this.checkBulletPlatformCollision();
     this.updateBulletDirection();
-    this.updateMarioSprite();
     this.checkMarioFlagCollision();
     this.checkMarioPlatformCollision();
+    this.updateMarioSprite();
     this.checkMarioGoombaCollision();
   };
 
@@ -635,6 +635,8 @@ export class World {
       return;
     }
 
+    if (!this.isGameActive) return;
+
     if (this.mario.dx === 0 && this.mario.isOnGround) {
       if (this.lastKey === "right") {
         this.mario.frames = 0;
@@ -649,9 +651,9 @@ export class World {
   }
 
   setupEventListener() {
-    // this.canvas.addEventListener("click", () => {
-    //   media["themeSong"].play();
-    // });
+    this.canvas.addEventListener("click", () => {
+      media["themeSong"].play();
+    });
 
     addEventListener("keydown", (e) => {
       if (e.code === "KeyA") {
