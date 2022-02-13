@@ -24,5 +24,42 @@ body {
 
 canvas {
   border: 1px solid black;
+}
+
+.menu-screen-container {
+  height: 480px;
+  width: 1280px;
+  background: url("/src/images/bg.png");
+  border: 1px solid black;
+  display: flex;
+  flex-flow: column-reverse;
+  justify-content: center;
+  align-items: center;
+}
+
+.start-game-btn {
+  font-family: "Poppins", sans-serif;
+  margin-top: 22px;
+  font-size: 18px;
+  font-weight: 500;
+  border-radius: 100px;
+  width: 300px;
+  cursor: pointer;
+  padding: 20px 40px;
+  border: 1px solid #000;
+  background: royalblue;
+  color: #fff;
+  transition: all 0.2s ease-in;
+}
+
+.start-game-btn:hover {
+  transform: translateY(-4px);
+}
+
+.main-screen-container {
+  display: none;
+}
+
+#canvas {
   background: url("./images/bg.png");
 }

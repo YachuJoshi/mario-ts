@@ -65,6 +65,7 @@ export class World {
     this.setupEventListener();
     this.renderMap();
     this.isGameActive = true;
+    media["themeSong"].play();
     media["themeSong"].loop = true;
     media["themeSong"].volume = 0.6;
   }
@@ -651,10 +652,6 @@ export class World {
   }
 
   setupEventListener() {
-    this.canvas.addEventListener("click", () => {
-      media["themeSong"].play();
-    });
-
     addEventListener("keydown", (e) => {
       if (e.code === "KeyA") {
         this.keys.left = true;
