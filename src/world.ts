@@ -5,6 +5,7 @@ import { Mario } from "./mario";
 import { Element } from "./element";
 import { Goomba } from "./goomba";
 import { PowerUp } from "./powerup";
+import { Bullet } from "./bullet";
 import { media } from "./media";
 import { getCollisionDirection, getTileMapIndex } from "./utils";
 
@@ -27,6 +28,7 @@ export class World {
   };
   goombas: Goomba[];
   powerUps: PowerUp[];
+  bullets: Bullet[];
   coins: number;
   centerPos: number;
   scrollOffset: number;
@@ -56,6 +58,7 @@ export class World {
     };
     this.goombas = [];
     this.powerUps = [];
+    this.bullets = [];
     this.centerPos = 0;
     this.lastKey = "right";
     this.scrollOffset = 0;
@@ -140,6 +143,7 @@ export class World {
       });
     }
 
+    this.bullets.forEach((bullet) => bullet.draw(this.ctx));
     this.goombas.forEach((goomba) => goomba.draw(this.ctx));
     this.powerUps.forEach((powerUp) => powerUp.draw(this.ctx));
     this.mario.draw(this.ctx);
@@ -149,6 +153,7 @@ export class World {
     this.centerPos = this.scrollOffset + viewPort / 2 - 120;
     this.mario.update();
     this.moveMario();
+    this.bullets.forEach((bullet) => bullet.update());
     this.goombas.forEach((goomba) => goomba.update());
     this.powerUps.forEach((powerUp) => {
       powerUp.update();
@@ -288,6 +293,7 @@ export class World {
       }
 
       if (bottom) {
+        if (element.type === 7 || element.type === 8) return;
         this.mario.isJumping = false;
         this.mario.isOnGround = true;
         this.mario.y -= offset;
@@ -564,9 +570,9 @@ export class World {
   }
 
   setupEventListener() {
-    this.canvas.addEventListener("click", () => {
-      media["themeSong"].play();
-    });
+    // this.canvas.addEventListener("click", () => {
+    //   media["themeSong"].play();
+    // });
 
     addEventListener("keydown", (e) => {
       if (e.code === "KeyA") {
@@ -574,11 +580,13 @@ export class World {
         this.lastKey = "left";
         return;
       }
+
       if (e.code === "KeyD") {
         this.keys.right = true;
         this.lastKey = "right";
         return;
       }
+
       if (
         e.code === "Space" &&
         !this.keys.space &&
@@ -596,6 +604,20 @@ export class World {
           return;
         }
         media["jumpBig"].play();
+        return;
+      }
+
+      if (e.code === "ControlLeft") {
+        if (this.mario.category !== "super") return;
+
+        this.bullets.push(
+          new Bullet({
+            x: this.mario.x + this.mario.width / 2,
+            y: this.mario.y + this.mario.height / 2,
+          })
+        );
+
+        console.log(this.bullets);
       }
     });
 

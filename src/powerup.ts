@@ -19,8 +19,8 @@ export class PowerUp {
   sX: number;
   sY: number;
   speed: 2;
-  height: number;
-  width: number;
+  height: 32;
+  width: 32;
   frames: number;
   type: PowerUpType;
 

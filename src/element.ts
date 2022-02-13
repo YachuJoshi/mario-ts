@@ -15,8 +15,8 @@ export class Element {
   y: number;
   sX: number;
   sY: number;
-  height: number;
-  width: number;
+  height: 32;
+  width: 32;
   type: number;
 
   constructor(props: ElementProps) {

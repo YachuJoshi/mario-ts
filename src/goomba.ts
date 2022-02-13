@@ -13,8 +13,8 @@ const goombaImage = createImage(goombaImg);
 export class Goomba {
   x: number;
   y: number;
-  width: number;
-  height: number;
+  width: 32;
+  height: 32;
   dx: number;
   sX: number;
   sY: number;
