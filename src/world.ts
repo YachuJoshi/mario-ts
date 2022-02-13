@@ -32,7 +32,7 @@ export class World {
   coins: number;
   centerPos: number;
   scrollOffset: number;
-  lastKey: string;
+  lastKey: "left" | "right";
   isGameActive: boolean;
   marioInGround: boolean;
   gameAnimationFrame: number;
@@ -154,7 +154,13 @@ export class World {
     this.mario.update();
     this.moveMario();
     this.bullets.forEach((bullet) => bullet.update());
-    this.goombas.forEach((goomba) => goomba.update());
+    this.goombas.forEach((goomba, gIndex) => {
+      goomba.update();
+
+      if (goomba.y > CANVAS_HEIGHT) {
+        this.goombas.splice(gIndex, 1);
+      }
+    });
     this.powerUps.forEach((powerUp) => {
       powerUp.update();
       powerUp.dy += gravity;
@@ -186,8 +192,14 @@ export class World {
     this.checkGoombaElementCollision(this.elements["pipes"]);
     this.checkPowerUpElementCollision(this.elements["blocks"]);
     this.checkPowerUpElementCollision(this.elements["pipes"]);
+    this.checkBulletElementCollision(this.elements["pipes"]);
+    this.checkBulletElementCollision(this.elements["blocks"]);
+    this.checkBulletBoundaryCollision();
+    this.checkGoombaBulletCollision();
     this.checkPowerUpPlatformCollision();
     this.checkMarioPowerUpCollision();
+    this.checkBulletPlatformCollision();
+    this.updateBulletDirection();
     this.updateMarioSprite();
     this.checkMarioFlagCollision();
     this.checkMarioPlatformCollision();
@@ -453,7 +465,6 @@ export class World {
     elementArray.forEach((element) => {
       this.powerUps.forEach((powerUp) => {
         const dir = getCollisionDirection(powerUp, element);
-
         if (!dir) return;
 
         const { left, right, top, bottom, offset } = dir;
@@ -497,6 +508,74 @@ export class World {
           powerUp.dy = 0;
         }
       });
+    });
+  }
+
+  checkBulletBoundaryCollision(): void {
+    this.bullets.forEach((bullet, index) => {
+      if (bullet.x < 0 || bullet.y + bullet.height > CANVAS_HEIGHT) {
+        this.bullets.splice(index, 1);
+      }
+    });
+  }
+
+  checkBulletElementCollision(elementArray: Element[]): void {
+    elementArray.forEach((element) => {
+      this.bullets.forEach((bullet, index) => {
+        const dir = getCollisionDirection(bullet, element);
+        if (!dir) return;
+
+        const { left, right, top, bottom } = dir;
+
+        if (bottom) {
+          bullet.dy = -bullet.dy;
+          return;
+        }
+
+        if (left || right) {
+          if (bottom || top) return;
+
+          this.bullets.splice(index, 1);
+          return;
+        }
+      });
+    });
+  }
+
+  checkBulletPlatformCollision(): void {
+    const { platforms } = this.elements;
+    this.bullets.forEach((bullet) => {
+      platforms.forEach((platform) => {
+        if (
+          bullet.x + bullet.width > platform.x &&
+          bullet.x < platform.x + platform.width &&
+          bullet.y + bullet.height + bullet.dy >= platform.y
+        ) {
+          bullet.dy = -bullet.speed;
+        }
+      });
+    });
+  }
+
+  checkGoombaBulletCollision(): void {
+    this.bullets.forEach((bullet, bIndex) => {
+      this.goombas.forEach((goomba) => {
+        if (goomba.state === "dead") return;
+
+        const dir = getCollisionDirection(bullet, goomba);
+        if (!dir) return;
+
+        this.bullets.splice(bIndex, 1);
+        goomba.state = "deadFromBullet";
+      });
+    });
+  }
+
+  updateBulletDirection(): void {
+    this.bullets.forEach((bullet) => {
+      if (bullet.y <= bullet.bounceOffset && bullet.dy < 0) {
+        bullet.dy = -bullet.dy;
+      }
     });
   }
 
@@ -607,17 +686,20 @@ export class World {
         return;
       }
 
-      if (e.code === "ControlLeft") {
+      if (e.code === "ControlLeft" && !this.keys.ctrl) {
         if (this.mario.category !== "super") return;
 
+        this.keys.ctrl = true;
         this.bullets.push(
           new Bullet({
             x: this.mario.x + this.mario.width / 2,
             y: this.mario.y + this.mario.height / 2,
+            direction: this.lastKey,
           })
         );
 
-        console.log(this.bullets);
+        media["bullet"].play();
+        return;
       }
     });
 
@@ -633,6 +715,10 @@ export class World {
 
         case "Space":
           this.keys.space = false;
+          break;
+
+        case "ControlLeft":
+          this.keys.ctrl = false;
           break;
       }
     });

@@ -38,7 +38,7 @@ export class Mario {
     this.dy = 0;
     this.speed = 4;
     this.isInvulnerable = false;
-    this.category = "super";
+    this.category = "small";
     this.isJumping = false;
     this.isOnGround = false;
     this.frames = 0;

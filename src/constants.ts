@@ -22,6 +22,7 @@ const audioElements = {
   6: "powerUpAppear",
   7: "stomp",
   8: "stageClear",
-  9: "themeSong",
+  9: "bullet",
+  10: "themeSong",
 };
 export const mediaNames = Object.values(audioElements);
