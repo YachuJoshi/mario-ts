@@ -1,1 +1,1 @@
-## Super Mario Bros created in Vanilla TypeScript
+## Super Mario Bros - Vanilla TypeScript
