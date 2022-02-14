@@ -135,7 +135,7 @@ export class World {
   }
 
   renderLoop(): void {
-    this.ctx.clearRect(0, 0, maxMapWidth, this.canvas.height);
+    this.ctx.clearRect(this.scrollOffset, 0, viewPort, this.canvas.height);
 
     for (const elem in this.elements) {
       const element = this.elements[elem];
@@ -191,6 +191,7 @@ export class World {
     this.checkMarioElementCollision(this.elements["pipes"]);
     this.checkMarioElementCollision(this.elements["blocks"]);
     this.checkGoombaElementCollision(this.elements["pipes"]);
+    this.checkGoombaElementCollision(this.elements["blocks"]);
     this.checkPowerUpElementCollision(this.elements["blocks"]);
     this.checkPowerUpElementCollision(this.elements["pipes"]);
     this.checkBulletElementCollision(this.elements["pipes"]);
@@ -236,7 +237,7 @@ export class World {
       if (this.mario.x >= maxMapWidth - 75) return;
 
       if (this.mario.x < maxMapWidth - viewPort / 2 - 160) {
-        this.scrollOffset += 4;
+        this.scrollOffset += this.mario.speed;
         this.ctx.translate(-this.mario.speed, 0);
         return;
       }

@@ -47,6 +47,7 @@ export class Mario {
   }
 
   draw(ctx: CanvasRenderingContext2D): void {
+    let roundedY = this.y | 0;
     this.sX = this.frames * this.width;
     ctx.drawImage(
       marioSprite,
@@ -55,7 +56,7 @@ export class Mario {
       this.width,
       this.height,
       this.x,
-      this.y,
+      roundedY,
       this.width,
       this.height
     );
