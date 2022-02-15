@@ -333,7 +333,7 @@ export class World {
 
   checkMarioGoombaCollision(): void {
     this.goombas.forEach((goomba, index) => {
-      if (goomba.state === "dead") return;
+      if (goomba.state === "dead" || goomba.state === "deadFromBullet") return;
       if (this.mario.isInvulnerable) return;
 
       let dir = getCollisionDirection(this.mario, goomba);
@@ -449,7 +449,8 @@ export class World {
   checkGoombaElementCollision(elementArray: Element[]): void {
     elementArray.forEach((element) => {
       this.goombas.forEach((goomba) => {
-        if (goomba.state === "dead") return;
+        if (goomba.state === "dead" || goomba.state === "deadFromBullet")
+          return;
 
         // Check collision for alive goombas
         const dir = getCollisionDirection(goomba, element);
@@ -562,7 +563,8 @@ export class World {
   checkGoombaBulletCollision(): void {
     this.bullets.forEach((bullet, bIndex) => {
       this.goombas.forEach((goomba) => {
-        if (goomba.state === "dead") return;
+        if (goomba.state === "dead" || goomba.state === "deadFromBullet")
+          return;
 
         const dir = getCollisionDirection(bullet, goomba);
         if (!dir) return;
