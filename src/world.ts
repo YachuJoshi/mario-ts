@@ -6,6 +6,7 @@ import { Element } from "./element";
 import { Goomba } from "./goomba";
 import { PowerUp } from "./powerup";
 import { Bullet } from "./bullet";
+import { Coin } from "./coin";
 import { media } from "./media";
 import { getCollisionDirection, getTileMapIndex } from "./utils";
 
@@ -29,7 +30,8 @@ export class World {
   goombas: Goomba[];
   powerUps: PowerUp[];
   bullets: Bullet[];
-  coins: number;
+  coins: Coin[];
+  coinCount: number;
   centerPos: number;
   scrollOffset: number;
   lastKey: "left" | "right";
@@ -58,9 +60,11 @@ export class World {
     };
     this.goombas = [];
     this.powerUps = [];
+    this.coins = [];
     this.bullets = [];
     this.centerPos = 0;
     this.lastKey = "right";
+    this.coinCount = 0;
     this.scrollOffset = 0;
     this.setupEventListener();
     this.renderMap();
@@ -137,6 +141,8 @@ export class World {
   renderLoop(): void {
     this.ctx.clearRect(this.scrollOffset, 0, viewPort, this.canvas.height);
 
+    this.coins.forEach((coins) => coins.draw(this.ctx));
+
     for (const elem in this.elements) {
       const element = this.elements[elem];
       element.forEach((item) => {
@@ -165,6 +171,15 @@ export class World {
     this.powerUps.forEach((powerUp) => {
       powerUp.update();
       powerUp.dy += gravity;
+    });
+    this.coins.forEach((coin, cIndex) => {
+      if (coin.y > coin.initialY) {
+        this.coins.splice(cIndex, 1);
+        return;
+      }
+
+      coin.update();
+      coin.dy += gravity;
     });
 
     this.marioInGround = this.mario.isOnGround;
@@ -202,6 +217,7 @@ export class World {
     this.checkMarioPowerUpCollision();
     this.checkBulletPlatformCollision();
     this.updateBulletDirection();
+    this.updateCoinDirection();
     this.checkMarioFlagCollision();
     this.checkMarioPlatformCollision();
     this.updateMarioSprite();
@@ -282,6 +298,14 @@ export class World {
           if (element.type === 4) return;
 
           if (element.type === 2) {
+            const { row, column } = getTileMapIndex(element);
+            this.coins.push(
+              new Coin({
+                x: column * tileSize,
+                y: row * tileSize,
+              })
+            );
+            this.coinCount++;
             media["coinAudio"].play();
           }
           if (element.type === 3) {
@@ -579,6 +603,14 @@ export class World {
     this.bullets.forEach((bullet) => {
       if (bullet.y <= bullet.bounceOffset && bullet.dy < 0) {
         bullet.dy = -bullet.dy;
+      }
+    });
+  }
+
+  updateCoinDirection(): void {
+    this.coins.forEach((coin) => {
+      if (coin.y <= coin.bounceOffset && coin.dy < 0) {
+        coin.dy = 0;
       }
     });
   }
