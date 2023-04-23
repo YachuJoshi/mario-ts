@@ -1,7 +1,7 @@
 {
-  "name": "vanilla-ts-boilerplate",
+  "name": "mario-typescript",
   "version": "1.0.0",
-  "description": "Vanilla TS Boilerplate",
+  "description": "Mario Game created in Vanilla TypeScript",
   "main": "index.js",
   "scripts": {
     "dev": "webpack-dev-server",
@@ -9,19 +9,19 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/YachuJoshi/vanilla-ts-boilerplate.git"
+    "url": "git+https://github.com/YachuJoshi/mario-ts.git"
   },
   "keywords": [
     "Vanilla",
-    "TS",
-    "Boilerplate"
+    "TypeScript",
+    "Mario"
   ],
   "author": "Yachu Joshi",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/YachuJoshi/vanilla-ts-boilerplate/issues"
+    "url": "https://github.com/YachuJoshi/mario-ts/issues"
   },
-  "homepage": "https://github.com/YachuJoshi/vanilla-ts-boilerplate#readme",
+  "homepage": "https://github.com/YachuJoshi/mario-ts#readme",
   "dependencies": {
     "css-loader": "^6.5.1",
     "file-loader": "^6.2.0",
