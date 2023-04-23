@@ -8,8 +8,8 @@ import { PowerUp } from "./powerup";
 import { Bullet } from "./bullet";
 import { Coin } from "./coin";
 import { media } from "./media";
-import { scoreTextElement } from "./htmlElements";
 import { getCollisionDirection, getTileMapIndex } from "./utils";
+import { scoreTextElement, coinTextElement } from "./htmlElements";
 
 interface Keys {
   [key: string]: boolean;
@@ -151,7 +151,6 @@ export class World {
     this.ctx.clearRect(this.scrollOffset, 0, viewPort, this.canvas.height);
 
     this.coins.forEach((coins) => coins.draw(this.ctx));
-
     for (const elem in this.elements) {
       const element = this.elements[elem];
       element.forEach((item) => {
@@ -165,11 +164,18 @@ export class World {
     this.mario.draw(this.ctx);
   }
 
+  updateAndRenderScoreAndCoin = (): void => {
+    this.score = Math.max(this.score, this.mario.x - 50);
+    scoreTextElement.textContent = `Score: ${this.score}`;
+    coinTextElement.textContent = `Coins: ${this.coinCount}`;
+  };
+
   gameLoop = (): void => {
     this.centerPos = this.scrollOffset + Math.floor(viewPort / 2) - 120;
     this.mario.update();
     this.moveMario();
     this.bullets.forEach((bullet) => bullet.update());
+
     this.goombas.forEach((goomba, gIndex) => {
       goomba.update();
 
@@ -177,10 +183,12 @@ export class World {
         this.goombas.splice(gIndex, 1);
       }
     });
+
     this.powerUps.forEach((powerUp) => {
       powerUp.update();
       powerUp.dy += gravity;
     });
+
     this.coins.forEach((coin, cIndex) => {
       if (coin.y > coin.initialY) {
         this.coins.splice(cIndex, 1);
@@ -215,9 +223,8 @@ export class World {
 
   startGameUpdateInterval = (): void => {
     this.interval = setInterval(() => {
-      this.score = Math.max(this.score, this.mario.x - 50);
-      scoreTextElement.textContent = `Score: ${this.score}`;
       this.gameLoop();
+      this.updateAndRenderScoreAndCoin();
       this.checkMarioElementCollision(this.elements["pipes"]);
       this.checkMarioElementCollision(this.elements["blocks"]);
       this.checkGoombaElementCollision(this.elements["pipes"]);
@@ -319,12 +326,14 @@ export class World {
             this.coins.push(
               new Coin({
                 x: column * tileSize,
-                y: row * tileSize,
+                y: row * tileSize - 5,
               })
             );
             this.coinCount++;
+            this.score += 10;
             media["coinAudio"].play();
           }
+
           if (element.type === 3) {
             const { row, column } = getTileMapIndex(element);
             const type =
@@ -387,6 +396,7 @@ export class World {
         goomba.state = "dead";
         this.mario.dy = -8;
         media["stomp"].play();
+        this.score += 80;
 
         setTimeout(() => {
           this.goombas.splice(index, 1);
@@ -439,6 +449,7 @@ export class World {
 
       if (!dir) return;
 
+      this.score += 50;
       media["powerUp"].play();
       this.powerUps.splice(index, 1);
 
