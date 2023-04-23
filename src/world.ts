@@ -662,7 +662,7 @@ export class World {
       return;
     }
 
-    if (this.keys.space) {
+    if (this.keys.space && !this.mario.isOnGround) {
       this.mario.isJumping = true;
       this.mario.isOnGround = false;
 
