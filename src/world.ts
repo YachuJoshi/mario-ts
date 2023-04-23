@@ -19,6 +19,7 @@ const gravity = 0.8;
 const blocks = [2, 3, 4];
 const flags = [5, 6];
 const pipes = [7, 8, 9, 10];
+
 export class World {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
@@ -158,7 +159,7 @@ export class World {
   }
 
   gameLoop = (): void => {
-    this.centerPos = this.scrollOffset + viewPort / 2 - 120;
+    this.centerPos = this.scrollOffset + Math.floor(viewPort / 2) - 120;
     this.mario.update();
     this.moveMario();
     this.bullets.forEach((bullet) => bullet.update());
@@ -196,13 +197,12 @@ export class World {
       clearInterval(this.interval);
       cancelAnimationFrame(this.gameAnimationFrame);
 
-      setTimeout(this.restart, 3000);
+      setTimeout(this.restart, 2500);
     }
   };
 
   animate = (): void => {
     this.gameAnimationFrame = requestAnimationFrame(this.animate);
-
     this.renderLoop();
   };
 
@@ -238,6 +238,8 @@ export class World {
   };
 
   moveMario(): void {
+    if (!this.isGameActive) return;
+
     if (this.keys.left && this.keys.right) {
       this.mario.dx = 0;
       return;
@@ -276,6 +278,8 @@ export class World {
   }
 
   checkMarioPlatformCollision(): void {
+    if (!this.isGameActive) return;
+
     const { platforms } = this.elements;
     platforms.forEach((platform) => {
       if (
@@ -291,6 +295,8 @@ export class World {
   }
 
   checkMarioElementCollision(elementArray: Element[]): void {
+    if (!this.isGameActive) return;
+
     elementArray.forEach((element) => {
       const dir = getCollisionDirection(this.mario, element);
 
@@ -364,6 +370,8 @@ export class World {
   }
 
   checkMarioGoombaCollision(): void {
+    if (!this.isGameActive) return;
+
     this.goombas.forEach((goomba, index) => {
       if (goomba.state === "dead" || goomba.state === "deadFromBullet") return;
       if (this.mario.isInvulnerable) return;
@@ -405,6 +413,7 @@ export class World {
         goomba.dx = -goomba.dx;
         this.mario.isInvulnerable = true;
         media["powerDown"].play();
+
         setTimeout(() => {
           this.mario.isInvulnerable = false;
         }, 1000);
@@ -423,6 +432,8 @@ export class World {
   }
 
   checkMarioPowerUpCollision(): void {
+    if (!this.isGameActive) return;
+
     this.powerUps.forEach((powerUp, index) => {
       const dir = getCollisionDirection(this.mario, powerUp);
 
@@ -445,6 +456,8 @@ export class World {
   }
 
   checkMarioFlagCollision(): void {
+    if (!this.isGameActive) return;
+
     const { flags } = this.elements;
     flags.forEach((flag) => {
       const dir = getCollisionDirection(this.mario, flag);
@@ -458,6 +471,7 @@ export class World {
       if (left) {
         this.mario.frames = 10;
       }
+
       if (right) {
         this.mario.frames = 11;
       }
@@ -627,6 +641,8 @@ export class World {
   updateMarioSprite(): void {
     this.mario.updateSprite();
 
+    if (!this.isGameActive) return;
+
     if (this.keys.space) {
       this.mario.isJumping = true;
       this.mario.isOnGround = false;
@@ -679,8 +695,6 @@ export class World {
       }
       return;
     }
-
-    if (!this.isGameActive) return;
 
     if (this.mario.dx === 0 && this.mario.isOnGround) {
       if (this.lastKey === "right") {
