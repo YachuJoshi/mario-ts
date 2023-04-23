@@ -37,6 +37,7 @@ export class World {
   lastKey: "left" | "right";
   isGameActive: boolean;
   marioInGround: boolean;
+  interval: NodeJS.Timer;
   gameAnimationFrame: number;
 
   constructor() {
@@ -192,41 +193,48 @@ export class World {
       media["marioDie"].play();
       media["themeSong"].pause();
       media["themeSong"].currentTime = 0;
+      clearInterval(this.interval);
       cancelAnimationFrame(this.gameAnimationFrame);
 
       setTimeout(this.restart, 3000);
     }
   };
 
-  start = (): void => {
-    this.gameAnimationFrame = requestAnimationFrame(this.start);
+  animate = (): void => {
+    this.gameAnimationFrame = requestAnimationFrame(this.animate);
 
     this.renderLoop();
-    this.gameLoop();
-    this.checkMarioElementCollision(this.elements["pipes"]);
-    this.checkMarioElementCollision(this.elements["blocks"]);
-    this.checkGoombaElementCollision(this.elements["pipes"]);
-    this.checkGoombaElementCollision(this.elements["blocks"]);
-    this.checkPowerUpElementCollision(this.elements["blocks"]);
-    this.checkPowerUpElementCollision(this.elements["pipes"]);
-    this.checkBulletElementCollision(this.elements["pipes"]);
-    this.checkBulletElementCollision(this.elements["blocks"]);
-    this.checkBulletBoundaryCollision();
-    this.checkGoombaBulletCollision();
-    this.checkPowerUpPlatformCollision();
-    this.checkMarioPowerUpCollision();
-    this.checkBulletPlatformCollision();
-    this.updateBulletDirection();
-    this.updateCoinDirection();
-    this.checkMarioFlagCollision();
-    this.checkMarioPlatformCollision();
-    this.updateMarioSprite();
-    this.checkMarioGoombaCollision();
+  };
+
+  startGameUpdateInterval = (): void => {
+    this.interval = setInterval(() => {
+      this.gameLoop();
+      this.checkMarioElementCollision(this.elements["pipes"]);
+      this.checkMarioElementCollision(this.elements["blocks"]);
+      this.checkGoombaElementCollision(this.elements["pipes"]);
+      this.checkGoombaElementCollision(this.elements["blocks"]);
+      this.checkPowerUpElementCollision(this.elements["blocks"]);
+      this.checkPowerUpElementCollision(this.elements["pipes"]);
+      this.checkBulletElementCollision(this.elements["pipes"]);
+      this.checkBulletElementCollision(this.elements["blocks"]);
+      this.checkBulletBoundaryCollision();
+      this.checkGoombaBulletCollision();
+      this.checkPowerUpPlatformCollision();
+      this.checkMarioPowerUpCollision();
+      this.checkBulletPlatformCollision();
+      this.updateBulletDirection();
+      this.updateCoinDirection();
+      this.checkMarioFlagCollision();
+      this.checkMarioPlatformCollision();
+      this.updateMarioSprite();
+      this.checkMarioGoombaCollision();
+    }, 16.7);
   };
 
   restart = (): void => {
     this.init();
-    this.start();
+    this.animate();
+    this.startGameUpdateInterval();
   };
 
   moveMario(): void {
@@ -386,8 +394,9 @@ export class World {
           media["themeSong"].pause();
           media["themeSong"].currentTime = 0;
 
+          clearInterval(this.interval);
           cancelAnimationFrame(this.gameAnimationFrame);
-          setTimeout(this.restart, 3000);
+          setTimeout(this.restart, 2500);
 
           return;
         }

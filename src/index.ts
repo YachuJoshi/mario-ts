@@ -13,5 +13,6 @@ startGameBtn.addEventListener("click", () => {
   mainMenuContainer.style.display = "block";
 
   const world = new World();
-  world.start();
+  world.animate();
+  world.startGameUpdateInterval();
 });
