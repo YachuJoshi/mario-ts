@@ -39,6 +39,8 @@ export class World {
   isGameActive: boolean;
   marioInGround: boolean;
   interval: NodeJS.Timer;
+  marioDeadFromGoomba: boolean;
+  levelComplete: boolean;
   gameAnimationFrame: number;
 
   constructor() {
@@ -71,6 +73,8 @@ export class World {
     this.setupEventListener();
     this.renderMap();
     this.isGameActive = true;
+    this.levelComplete = false;
+    this.marioDeadFromGoomba = false;
     media["themeSong"].play();
     media["themeSong"].loop = true;
     media["themeSong"].volume = 0.6;
@@ -237,9 +241,7 @@ export class World {
     this.startGameUpdateInterval();
   };
 
-  moveMario(): void {
-    if (!this.isGameActive) return;
-
+  moveMario = (): void => {
     if (this.keys.left && this.keys.right) {
       this.mario.dx = 0;
       return;
@@ -275,11 +277,9 @@ export class World {
     }
 
     return;
-  }
+  };
 
-  checkMarioPlatformCollision(): void {
-    if (!this.isGameActive) return;
-
+  checkMarioPlatformCollision = (): void => {
     const { platforms } = this.elements;
     platforms.forEach((platform) => {
       if (
@@ -292,11 +292,9 @@ export class World {
         this.mario.dy = 0;
       }
     });
-  }
+  };
 
-  checkMarioElementCollision(elementArray: Element[]): void {
-    if (!this.isGameActive) return;
-
+  checkMarioElementCollision = (elementArray: Element[]): void => {
     elementArray.forEach((element) => {
       const dir = getCollisionDirection(this.mario, element);
 
@@ -367,11 +365,9 @@ export class World {
         return;
       }
     });
-  }
+  };
 
-  checkMarioGoombaCollision(): void {
-    if (!this.isGameActive) return;
-
+  checkMarioGoombaCollision = (): void => {
     this.goombas.forEach((goomba, index) => {
       if (goomba.state === "dead" || goomba.state === "deadFromBullet") return;
       if (this.mario.isInvulnerable) return;
@@ -397,6 +393,7 @@ export class World {
       if ((left || right) && offset > 4) {
         if (this.mario.category === "small") {
           this.mario.frames = 13;
+          this.marioDeadFromGoomba = true;
           this.isGameActive = false;
           media["marioDie"].play();
           media["themeSong"].pause();
@@ -429,11 +426,9 @@ export class World {
         }
       }
     });
-  }
+  };
 
-  checkMarioPowerUpCollision(): void {
-    if (!this.isGameActive) return;
-
+  checkMarioPowerUpCollision = (): void => {
     this.powerUps.forEach((powerUp, index) => {
       const dir = getCollisionDirection(this.mario, powerUp);
 
@@ -453,17 +448,16 @@ export class World {
         return;
       }
     });
-  }
+  };
 
-  checkMarioFlagCollision(): void {
-    if (!this.isGameActive) return;
-
+  checkMarioFlagCollision = (): void => {
     const { flags } = this.elements;
     flags.forEach((flag) => {
       const dir = getCollisionDirection(this.mario, flag);
       if (!dir) return;
 
       const { left, right } = dir;
+      this.levelComplete = true;
 
       this.mario.dx = 0;
       this.mario.dy = 2;
@@ -491,9 +485,9 @@ export class World {
       media["themeSong"].currentTime = 0;
       media["stageClear"].play();
     });
-  }
+  };
 
-  checkGoombaElementCollision(elementArray: Element[]): void {
+  checkGoombaElementCollision = (elementArray: Element[]): void => {
     elementArray.forEach((element) => {
       this.goombas.forEach((goomba) => {
         if (goomba.state === "dead" || goomba.state === "deadFromBullet")
@@ -509,9 +503,9 @@ export class World {
         }
       });
     });
-  }
+  };
 
-  checkPowerUpElementCollision(elementArray: Element[]): void {
+  checkPowerUpElementCollision = (elementArray: Element[]): void => {
     elementArray.forEach((element) => {
       this.powerUps.forEach((powerUp) => {
         const dir = getCollisionDirection(powerUp, element);
@@ -544,9 +538,9 @@ export class World {
         }
       });
     });
-  }
+  };
 
-  checkPowerUpPlatformCollision() {
+  checkPowerUpPlatformCollision = () => {
     const { platforms } = this.elements;
     this.powerUps.forEach((powerUp) => {
       platforms.forEach((platform) => {
@@ -559,17 +553,17 @@ export class World {
         }
       });
     });
-  }
+  };
 
-  checkBulletBoundaryCollision(): void {
+  checkBulletBoundaryCollision = (): void => {
     this.bullets.forEach((bullet, index) => {
       if (bullet.x < 0 || bullet.y + bullet.height > CANVAS_HEIGHT) {
         this.bullets.splice(index, 1);
       }
     });
-  }
+  };
 
-  checkBulletElementCollision(elementArray: Element[]): void {
+  checkBulletElementCollision = (elementArray: Element[]): void => {
     elementArray.forEach((element) => {
       this.bullets.forEach((bullet, index) => {
         const dir = getCollisionDirection(bullet, element);
@@ -590,9 +584,9 @@ export class World {
         }
       });
     });
-  }
+  };
 
-  checkBulletPlatformCollision(): void {
+  checkBulletPlatformCollision = (): void => {
     const { platforms } = this.elements;
     this.bullets.forEach((bullet) => {
       platforms.forEach((platform) => {
@@ -605,9 +599,9 @@ export class World {
         }
       });
     });
-  }
+  };
 
-  checkGoombaBulletCollision(): void {
+  checkGoombaBulletCollision = (): void => {
     this.bullets.forEach((bullet, bIndex) => {
       this.goombas.forEach((goomba) => {
         if (goomba.state === "dead" || goomba.state === "deadFromBullet")
@@ -620,28 +614,37 @@ export class World {
         goomba.state = "deadFromBullet";
       });
     });
-  }
+  };
 
-  updateBulletDirection(): void {
+  updateBulletDirection = (): void => {
     this.bullets.forEach((bullet) => {
       if (bullet.y <= bullet.bounceOffset && bullet.dy < 0) {
         bullet.dy = -bullet.dy;
       }
     });
-  }
+  };
 
-  updateCoinDirection(): void {
+  updateCoinDirection = (): void => {
     this.coins.forEach((coin) => {
       if (coin.y <= coin.bounceOffset && coin.dy < 0) {
         coin.dy = 0;
       }
     });
-  }
+  };
 
-  updateMarioSprite(): void {
+  updateMarioSprite = (): void => {
     this.mario.updateSprite();
+    const flagX = this.elements.flags[0].x + this.elements.flags[0].width;
 
-    if (!this.isGameActive) return;
+    if (this.marioDeadFromGoomba) {
+      this.mario.frames = 13;
+      return;
+    }
+
+    if (this.levelComplete && this.mario.isOnGround && this.mario.x > flagX) {
+      this.mario.frames = 12;
+      return;
+    }
 
     if (this.keys.space) {
       this.mario.isJumping = true;
@@ -707,9 +710,9 @@ export class World {
         return;
       }
     }
-  }
+  };
 
-  setupEventListener() {
+  setupEventListener = () => {
     addEventListener("keydown", (e) => {
       if (e.code === "KeyA") {
         this.keys.left = true;
@@ -731,8 +734,6 @@ export class World {
       ) {
         this.keys.space = true;
         this.mario.dy -= 13;
-
-        if (!this.isGameActive) return;
 
         // Play Audio
         if (this.mario.category === "small") {
@@ -779,5 +780,5 @@ export class World {
           break;
       }
     });
-  }
+  };
 }
