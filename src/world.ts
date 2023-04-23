@@ -8,6 +8,7 @@ import { PowerUp } from "./powerup";
 import { Bullet } from "./bullet";
 import { Coin } from "./coin";
 import { media } from "./media";
+import { scoreTextElement } from "./htmlElements";
 import { getCollisionDirection, getTileMapIndex } from "./utils";
 
 interface Keys {
@@ -28,6 +29,7 @@ export class World {
   elements: {
     [key: string]: Element[];
   };
+  score: number;
   goombas: Goomba[];
   powerUps: PowerUp[];
   bullets: Bullet[];
@@ -56,6 +58,7 @@ export class World {
       x: 50,
       y: 100,
     });
+    this.score = 0;
     this.elements = {
       platforms: [],
       pipes: [],
@@ -212,6 +215,8 @@ export class World {
 
   startGameUpdateInterval = (): void => {
     this.interval = setInterval(() => {
+      this.score = Math.max(this.score, this.mario.x - 50);
+      scoreTextElement.textContent = `Score: ${this.score}`;
       this.gameLoop();
       this.checkMarioElementCollision(this.elements["pipes"]);
       this.checkMarioElementCollision(this.elements["blocks"]);

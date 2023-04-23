@@ -8,6 +8,11 @@
   box-sizing: inherit;
 }
 
+@font-face {
+  font-family: "Mario";
+  src: url("../public/mario.ttf");
+}
+
 html,
 body {
   box-sizing: border-box;
@@ -58,6 +63,16 @@ canvas {
 
 .main-screen-container {
   display: none;
+  position: relative;
+}
+
+.score-text {
+  position: absolute;
+  top: 20px;
+  left: 40px;
+  font-family: "Mario";
+  font-size: 28px;
+  color: white;
 }
 
 #canvas {

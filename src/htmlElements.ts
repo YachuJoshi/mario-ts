@@ -7,3 +7,7 @@ export const startGameBtn = <HTMLButtonElement>(
 export const mainMenuContainer = <HTMLElement>(
   document.querySelector(".main-screen-container")
 );
+
+export const scoreTextElement = <HTMLDivElement>document.createElement("div");
+scoreTextElement.classList.add("score-text");
+mainMenuContainer.appendChild(scoreTextElement);
