@@ -232,7 +232,7 @@ export class World {
       this.checkMarioPlatformCollision();
       this.updateMarioSprite();
       this.checkMarioGoombaCollision();
-    }, 16.7);
+    }, 15);
   };
 
   restart = (): void => {
