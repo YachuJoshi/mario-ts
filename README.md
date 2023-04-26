@@ -7,3 +7,4 @@ Class mario game recreated using TypeScript & HTML5 Canvas.
 1. D: Move Forward
 2. A: Move Backward
 3. Space: Jump
+4. Ctrl: Shoot [ Super Mode ]
